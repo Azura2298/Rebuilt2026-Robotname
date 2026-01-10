@@ -74,7 +74,7 @@ public class VisionSubsystem extends SubsystemBase {
       SmartDashboard.putData("Camera " + (i + 1), poseEstField[i]);
     }
 
-    fieldmap = AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);
+    fieldmap = AprilTagFieldLayout.loadField(AprilTagFields.k);
 
     photonEstimatorCam1 =
         new PhotonPoseEstimator(
@@ -171,7 +171,8 @@ public class VisionSubsystem extends SubsystemBase {
       // SmartDashboard.putNumber("Rel X", relPose.getX());
       // SmartDashboard.putNumber("Rel Y", relPose.getY());
       // SmartDashboard.putNumber("Rel Rot", relPose.getRotation().getDegrees());
-    };
+    }
+    ;
     SmartDashboard.putBoolean("Stale Vision", estConsumer.isStale());
   }
 

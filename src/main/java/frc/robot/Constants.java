@@ -7,6 +7,8 @@ package frc.robot;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -43,7 +45,7 @@ public final class Constants {
             kMaxAngularSpeedRadiansPerSecond, kMaxAngularAccelerationRadiansPerSecondSquared);
   }
 
-  public static class Vision {
+  public static class VisionConstants {
     // Offsets, not measured so a transform of zero
     // Positive x is forward, positive y is left, positive z is up
     // Our official configuration has, front left is camera 1, and back left is camera 2,
@@ -92,6 +94,14 @@ public final class Constants {
     // (Fake values. Experiment and determine estimation noise on an actual robot.)
     public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);
     public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
+
+    public static final Pose2d autoAimTarget =
+        new Pose2d(
+            Distance.ofRelativeUnits(5, Units.Meters),
+            Distance.ofRelativeUnits(2, Units.Meters),
+            new Rotation2d());
+
+    public static final double kAutoAimP = 0.2;
   }
 
   // Constants specifically for Driving & Operation

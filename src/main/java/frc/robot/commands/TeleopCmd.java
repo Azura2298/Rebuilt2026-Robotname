@@ -6,8 +6,10 @@ package frc.robot.commands;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import java.util.function.Supplier;
 
@@ -21,6 +23,7 @@ public class TeleopCmd extends Command {
   private double speedDrive;
   private double speedTurn;
   private Supplier<Boolean> fieldOrient;
+  private double ContRotate;
 
   public TeleopCmd(DrivetrainSubsystem drives, Supplier<Boolean> fieldOrient) {
     driveSub = drives;
@@ -42,9 +45,27 @@ public class TeleopCmd extends Command {
     double ContY =
         MathUtil.applyDeadband(
             -controller.getRawAxis(DriveConstants.kDriveY), DriveConstants.deadzoneDriver);
-    double ContRotate =
-        MathUtil.applyDeadband(
-            -controller.getRawAxis(DriveConstants.kDriveRotate), DriveConstants.deadzoneDriver);
+
+    if (!DrivetrainSubsystem.autoAimEnabled) {
+      ContRotate =
+          MathUtil.applyDeadband(
+              -controller.getRawAxis(DriveConstants.kDriveRotate), DriveConstants.deadzoneDriver);
+    } else {
+      double angleTranslation =
+          (Math.atan2(
+                  VisionConstants.autoAimTarget.getY() - driveSub.getVisionPose().getY(),
+                  VisionConstants.autoAimTarget.getX() - driveSub.getVisionPose().getX())
+              - driveSub.getVisionPose().getRotation().getRadians());
+
+      if (angleTranslation > Math.PI && angleTranslation < 2 * Math.PI) {
+        ContRotate = VisionConstants.kAutoAimP * (angleTranslation - 2 * Math.PI);
+      } else if (angleTranslation >= 0) {
+        ContRotate = VisionConstants.kAutoAimP * (angleTranslation);
+      } else {
+        ContRotate = 0;
+        SmartDashboard.putBoolean("OH NO IT TURNED BAD", false);
+      }
+    }
 
     speedDrive = DrivetrainSubsystem.getTeleopMaxSpeed();
     speedTurn = DriveConstants.kMaxAngularSpeed;
