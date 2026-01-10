@@ -6,6 +6,7 @@ package frc.robot.subsystems;
 
 import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -15,6 +16,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -47,19 +49,12 @@ public class DrivetrainSubsystem extends SubsystemBase {
           RobotConstants.kRearRightDrivingCanId,
           RobotConstants.kRearRightTurningCanId,
           RobotConstants.kBackRightChassisAngularOffset);
-
-  private final SendableChooser<String> m_chooser = new SendableChooser<>();
   // The gyro sensor
   private AHRS m_gyro = new AHRS(NavXComType.kUSB1);
-
   // Slew rate filter variables for controlling lateral acceleration
   private double m_currentRotation = 0.0;
-  private double m_currentTranslationDir = 0.0;
-  private double m_currentTranslationMag = 0.0;
 
-  private double x;
-  private double y;
-  private double r;
+  public static double maxSpeedCmd;
 
   private boolean waiting = false;
   private double maxSpeedDrive;
@@ -82,15 +77,42 @@ public class DrivetrainSubsystem extends SubsystemBase {
             m_rearRight.getPosition()
           });
 
-  /** Creates a new DriveSubsystem. */
-  public DrivetrainSubsystem() {
-    zeroHeading();
-    // m_gyro.calibrate();
+  SwerveDrivePoseEstimator m_visionOdometry =
+      new SwerveDrivePoseEstimator(
+          DriveConstants.kDriveKinematics,
+          Rotation2d.fromDegrees(getHeading()),
+          new SwerveModulePosition[] {
+            m_frontLeft.getPosition(),
+            m_frontRight.getPosition(),
+            m_rearLeft.getPosition(),
+            m_rearRight.getPosition()
+          },
+          new Pose2d(10, 2, new Rotation2d()));
 
-    m_chooser.setDefaultOption("Medium Speed", DriveConstants.medium);
-    m_chooser.addOption("Low Speed", DriveConstants.low);
-    m_chooser.addOption("High Speed", DriveConstants.high);
-    SmartDashboard.putData("Speed Drop Down", m_chooser);
+  private int tick = 0;
+  private VisionSubsystem vision;
+
+  Field2d visionPose;
+
+  private static final SendableChooser<String> m_chooser = new SendableChooser<>();
+  private static final String max = "1";
+  private static final String high = "2";
+  private static final String medium = "3";
+  private static final String low = "4";
+
+  /** Creates a new DriveSubsystem. */
+  public DrivetrainSubsystem(VisionSubsystem vision) {
+    zeroHeading();
+    m_chooser.setDefaultOption("100%", max);
+    m_chooser.addOption("75%", high);
+    m_chooser.addOption("50%", medium);
+    m_chooser.addOption("25%", low);
+    SmartDashboard.putData("Drive Speed", m_chooser);
+
+    this.vision = vision;
+
+    visionPose = new Field2d();
+    SmartDashboard.putData("Vision Pose", visionPose);
   }
 
   /**
@@ -119,17 +141,12 @@ public class DrivetrainSubsystem extends SubsystemBase {
     double ySpeedDelivered = ySpeedCommanded * maxSpeedDrive;
     double rotDelivered = m_currentRotation * maxSpeedTurn;
 
-    x = xSpeedDelivered;
-    y = ySpeedDelivered;
-    r = rotDelivered;
-
     var swerveModuleStates =
         DriveConstants.kDriveKinematics.toSwerveModuleStates(
             ChassisSpeeds.fromFieldRelativeSpeeds(
                 xSpeedDelivered, ySpeedDelivered, rotDelivered, getRotation2d()));
 
-    SwerveDriveKinematics.desaturateWheelSpeeds(
-        swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
+    SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, getTeleopMaxSpeed());
     m_frontLeft.setDesiredState(swerveModuleStates[0]);
     m_frontRight.setDesiredState(swerveModuleStates[1]);
     m_rearLeft.setDesiredState(swerveModuleStates[2]);
@@ -162,16 +179,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
     double ySpeedDelivered = ySpeedCommanded * maxSpeedDrive;
     double rotDelivered = m_currentRotation * maxSpeedTurn;
 
-    x = xSpeedDelivered;
-    y = ySpeedDelivered;
-    r = rotDelivered;
-
     var swerveModuleStates =
         DriveConstants.kDriveKinematics.toSwerveModuleStates(
             new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
 
-    SwerveDriveKinematics.desaturateWheelSpeeds(
-        swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
+    SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, getTeleopMaxSpeed());
     m_frontLeft.setDesiredState(swerveModuleStates[0]);
     m_frontRight.setDesiredState(swerveModuleStates[1]);
     m_rearLeft.setDesiredState(swerveModuleStates[2]);
@@ -193,8 +205,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
    * @param desiredStates The desired SwerveModule states.
    */
   public void setModuleStates(SwerveModuleState[] desiredStates) {
-    SwerveDriveKinematics.desaturateWheelSpeeds(
-        desiredStates, DriveConstants.kMaxSpeedMetersPerSecond);
+    SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, getTeleopMaxSpeed());
     m_frontLeft.setDesiredState(desiredStates[0]);
     m_frontRight.setDesiredState(desiredStates[1]);
     m_rearLeft.setDesiredState(desiredStates[2]);
@@ -214,13 +225,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
     m_gyro.reset();
   }
 
-  /** Zeroes the heading of the robot. */
   public double gyroangle() {
     return m_gyro.getAngle() * (RobotConstants.kGyroReversed ? -1.0 : 1.0);
   }
 
   public double getHeading() {
-
     return Math.IEEEremainder(m_gyro.getAngle() * (RobotConstants.kGyroReversed ? -1.0 : 1.0), 360);
   }
 
@@ -261,10 +270,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
     m_rearRight.stop();
   }
 
-  public String getDropDown() {
-    return m_chooser.getSelected();
-  }
-
   public void setWait() {
     waiting = true;
   }
@@ -282,10 +287,31 @@ public class DrivetrainSubsystem extends SubsystemBase {
     return m_gyro.getRate() * (RobotConstants.kGyroReversed ? -1.0 : 1.0);
   }
 
+  public static double getTeleopMaxSpeed() {
+    double speed = 0;
+    switch (m_chooser.getSelected()) {
+      default:
+      case max:
+        speed = DriveConstants.kMaxSpeedMetersPerSecond;
+        break;
+      case high:
+        speed = 0.75 * DriveConstants.kMaxSpeedMetersPerSecond;
+        break;
+      case medium:
+        speed = 0.5 * DriveConstants.kMaxSpeedMetersPerSecond;
+        break;
+      case low:
+        speed = 0.25 * DriveConstants.kMaxSpeedMetersPerSecond;
+        break;
+    }
+    return speed;
+  }
+
   @Override
   public void periodic() {
     SmartDashboard.putNumber("Z axis angle", getHeading());
     SmartDashboard.putBoolean("Auto is Waiting", waiting);
+    SmartDashboard.putNumber("controller speed", maxSpeedCmd);
 
     // Update the odometry in the periodic block
     m_odometry.update(
@@ -296,5 +322,25 @@ public class DrivetrainSubsystem extends SubsystemBase {
           m_rearLeft.getPosition(),
           m_rearRight.getPosition()
         });
+
+    m_visionOdometry.update(
+        Rotation2d.fromDegrees(getHeading()),
+        new SwerveModulePosition[] {
+          m_frontLeft.getPosition(),
+          m_frontRight.getPosition(),
+          m_rearLeft.getPosition(),
+          m_rearRight.getPosition()
+        });
+
+    tick++;
+
+    if (tick == 10 && vision.estConsumer.initialized) {
+      tick = 0;
+      m_visionOdometry.addVisionMeasurement(
+          vision.estConsumer.getPose2d(),
+          vision.estConsumer.getTimeStamp(),
+          vision.estConsumer.getStdDevs());
+    }
+    visionPose.setRobotPose(m_visionOdometry.getEstimatedPosition());
   }
 }

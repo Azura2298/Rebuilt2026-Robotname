@@ -5,10 +5,18 @@
 package frc.robot;
 
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.Units;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Distance;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -35,6 +43,57 @@ public final class Constants {
             kMaxAngularSpeedRadiansPerSecond, kMaxAngularAccelerationRadiansPerSecondSquared);
   }
 
+  public static class Vision {
+    // Offsets, not measured so a transform of zero
+    // Positive x is forward, positive y is left, positive z is up
+    // Our official configuration has, front left is camera 1, and back left is camera 2,
+    // back right is camera 3, front right is camera 4
+    public static final Transform3d kRobotToCam1 =
+        new Transform3d(
+            Distance.ofRelativeUnits(11, Units.Inches),
+            Distance.ofRelativeUnits(11, Units.Inches),
+            Distance.ofRelativeUnits(24, Units.Centimeters),
+            new Rotation3d(
+                Angle.ofRelativeUnits(0, Units.Degrees),
+                Angle.ofRelativeUnits(30, Units.Degrees),
+                Angle.ofRelativeUnits(45, Units.Degrees)));
+
+    public static final Transform3d kRobotToCam2 =
+        new Transform3d(
+            Distance.ofRelativeUnits(-11, Units.Inches),
+            Distance.ofRelativeUnits(11, Units.Inches),
+            Distance.ofRelativeUnits(24, Units.Centimeters),
+            new Rotation3d(
+                Angle.ofRelativeUnits(0, Units.Degrees),
+                Angle.ofRelativeUnits(30, Units.Degrees),
+                Angle.ofRelativeUnits(135, Units.Degrees)));
+
+    public static final Transform3d kRobotToCam3 =
+        new Transform3d(
+            Distance.ofRelativeUnits(-11, Units.Inches),
+            Distance.ofRelativeUnits(-11, Units.Inches),
+            Distance.ofRelativeUnits(24, Units.Centimeters),
+            new Rotation3d(
+                Angle.ofRelativeUnits(0, Units.Degrees),
+                Angle.ofRelativeUnits(30, Units.Degrees),
+                Angle.ofRelativeUnits(225, Units.Degrees)));
+
+    public static final Transform3d kRobotToCam4 =
+        new Transform3d(
+            Distance.ofRelativeUnits(11, Units.Inches),
+            Distance.ofRelativeUnits(-11, Units.Inches),
+            Distance.ofRelativeUnits(24, Units.Centimeters),
+            new Rotation3d(
+                Angle.ofRelativeUnits(0, Units.Degrees),
+                Angle.ofRelativeUnits(30, Units.Degrees),
+                Angle.ofRelativeUnits(315, Units.Degrees)));
+
+    // The standard deviations of our vision estimated poses, which affect correction rate
+    // (Fake values. Experiment and determine estimation noise on an actual robot.)
+    public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);
+    public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
+  }
+
   // Constants specifically for Driving & Operation
   public static class DriveConstants {
     // Controller Ports ---
@@ -49,12 +108,6 @@ public final class Constants {
     public static final int kDriveRotate = 4;
     public static final double deadzoneDriver = 0.12;
 
-    // Speed Mode Strings
-    // Moved from DrivetrainSubsystem
-    public static final String low = "speed1";
-    public static final String medium = "speed2";
-    public static final String high = "speed3";
-
     public enum joysticks {
       DRIVER,
       OPERATOR
@@ -66,25 +119,16 @@ public final class Constants {
     public static final double kMaxSpeedMetersPerSecond = 6.8;
     public static final double kMaxAngularSpeed = 1.25 * 2 * Math.PI; // radians per second
 
-    // Drive Mode Speeds
-    // High
-    public static final double kSpeedHighDrive = 6.0;
-    public static final double kSpeedHighTurn = kMaxAngularSpeed;
-
-    // Medium is Default Speeds
-
-    // Slow
-    public static final double kSpeedSlowDrive = 2.1;
-    public static final double kSpeedSlowTurn = 1.8;
-
     public static final double kDirectionSlewRate = 4; // radians per second
     public static final double kMagnitudeSlewRate = 2; // percent per second (1 = 100%)
     public static final double kRotationalSlewRate = 5; // percent per second (1 = 100%)
 
     // Chassis configuration
-    public static final double kTrackWidth = Units.inchesToMeters(26.5);
+    public static final double kTrackWidth =
+        Distance.ofRelativeUnits(26.5, Units.Inches).in(Units.Meters);
     // Distance between centers of right and left wheels on robot
-    public static final double kWheelBase = Units.inchesToMeters(26.5);
+    public static final double kWheelBase =
+        Distance.ofRelativeUnits(26.5, Units.Inches).in(Units.Meters);
     // Distance between front and back wheels on robot
     public static final SwerveDriveKinematics kDriveKinematics =
         new SwerveDriveKinematics(
