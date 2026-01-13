@@ -14,9 +14,13 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.auto.*;
 // import frc.robot.auto.plans.*;
+import frc.robot.commands.IntakeWheel.IntakeWheelForwardCommand;
+import frc.robot.commands.IntakeWheel.IntakeWheelReverseCommand;
+import frc.robot.commands.IntakeWheel.IntakeWheelStopCommand;
 import frc.robot.commands.TeleopCmd;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.EstimateConsumer;
+import frc.robot.subsystems.IntakeWheelSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 import frc.utils.ControllerUtils;
 import org.littletonrobotics.urcl.URCL;
@@ -37,8 +41,9 @@ public class RobotContainer {
   Command auto;
 
   // Subsystems
-  private final DrivetrainSubsystem drivetrain = new DrivetrainSubsystem();
   private final VisionSubsystem vision = new VisionSubsystem(new EstimateConsumer());
+  private final DrivetrainSubsystem drivetrain = new DrivetrainSubsystem(vision);
+  private final IntakeWheelSubsystem intakeWheel = new IntakeWheelSubsystem();
 
   // Commands
   private final TeleopCmd teleopCmd =
@@ -90,6 +95,17 @@ public class RobotContainer {
     cutil
         .supplier(Controllers.xbox_a, DriveConstants.joysticks.DRIVER)
         .onTrue(new InstantCommand(() -> DrivetrainSubsystem.toggleAutoAim()));
+
+    // Intake Wheel Bindings
+    cutil
+        .supplier(Controllers.xbox_lb, DriveConstants.joysticks.OPERATOR)
+        .onTrue(new IntakeWheelForwardCommand(intakeWheel))
+        .onFalse(new IntakeWheelStopCommand(intakeWheel));
+
+    cutil
+        .supplier(Controllers.xbox_rb, DriveConstants.joysticks.OPERATOR)
+        .onTrue(new IntakeWheelReverseCommand(intakeWheel))
+        .onFalse(new IntakeWheelStopCommand(intakeWheel));
   }
 
   public Command getAutonomousCommand() {

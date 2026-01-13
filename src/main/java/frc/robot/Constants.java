@@ -163,6 +163,8 @@ public final class Constants {
     public static final int kRearLeftDrivingCanId = 8;
     public static final int kRearLeftTurningCanId = 7;
 
+    public static final int kIntakeWheelCanId = 10;
+
     // Used to declare Navx as upside down
     public static final boolean kGyroReversed = true;
 
@@ -171,6 +173,8 @@ public final class Constants {
     public static final double kFrontRightChassisAngularOffset = 0;
     public static final double kBackLeftChassisAngularOffset = Math.PI;
     public static final double kBackRightChassisAngularOffset = Math.PI / 2;
+
+    public static final double kIntakeWheelSpeed = 0.5;
   }
 
   // Constants specifically for Swerve Module
