@@ -77,7 +77,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
             m_rearRight.getPosition()
           });
 
-  SwerveDrivePoseEstimator m_visionOdometry =
+  SwerveDrivePoseEstimator visionOdometry =
       new SwerveDrivePoseEstimator(
           DriveConstants.kDriveKinematics,
           Rotation2d.fromDegrees(getHeading()),
@@ -89,6 +89,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
           },
           new Pose2d(10, 2, new Rotation2d()));
 
+  boolean visionOdometryInitialPose = false;
+
   private int tick = 0;
   private VisionSubsystem vision;
 
@@ -99,6 +101,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
   private static final String high = "2";
   private static final String medium = "3";
   private static final String low = "4";
+
+  public static boolean autoAimEnabled = false;
 
   /** Creates a new DriveSubsystem. */
   public DrivetrainSubsystem(VisionSubsystem vision) {
@@ -246,6 +250,10 @@ public class DrivetrainSubsystem extends SubsystemBase {
     return m_odometry.getPoseMeters();
   }
 
+  public Pose2d getVisionPose() {
+    return visionOdometry.getEstimatedPosition();
+  }
+
   /**
    * Resets the odometry to the specified pose.
    *
@@ -307,11 +315,16 @@ public class DrivetrainSubsystem extends SubsystemBase {
     return speed;
   }
 
+  public static void toggleAutoAim() {
+    autoAimEnabled = !autoAimEnabled;
+  }
+
   @Override
   public void periodic() {
     SmartDashboard.putNumber("Z axis angle", getHeading());
     SmartDashboard.putBoolean("Auto is Waiting", waiting);
     SmartDashboard.putNumber("controller speed", maxSpeedCmd);
+    SmartDashboard.putBoolean("Auto Aim Enabled", autoAimEnabled);
 
     // Update the odometry in the periodic block
     m_odometry.update(
@@ -323,7 +336,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
           m_rearRight.getPosition()
         });
 
-    m_visionOdometry.update(
+    visionOdometry.update(
         Rotation2d.fromDegrees(getHeading()),
         new SwerveModulePosition[] {
           m_frontLeft.getPosition(),
@@ -332,15 +345,17 @@ public class DrivetrainSubsystem extends SubsystemBase {
           m_rearRight.getPosition()
         });
 
+    if (!visionOdometryInitialPose && vision.estConsumer.initialized) {}
+
     tick++;
 
     if (tick == 10 && vision.estConsumer.initialized) {
       tick = 0;
-      m_visionOdometry.addVisionMeasurement(
+      visionOdometry.addVisionMeasurement(
           vision.estConsumer.getPose2d(),
           vision.estConsumer.getTimeStamp(),
           vision.estConsumer.getStdDevs());
     }
-    visionPose.setRobotPose(m_visionOdometry.getEstimatedPosition());
+    visionPose.setRobotPose(visionOdometry.getEstimatedPosition());
   }
 }

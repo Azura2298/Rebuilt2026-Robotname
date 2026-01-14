@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -12,9 +14,16 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.auto.*;
 // import frc.robot.auto.plans.*;
+import frc.robot.commands.IntakeWheel.IntakeWheelForwardCommand;
+import frc.robot.commands.IntakeWheel.IntakeWheelReverseCommand;
+import frc.robot.commands.IntakeWheel.IntakeWheelStopCommand;
 import frc.robot.commands.TeleopCmd;
 import frc.robot.subsystems.DrivetrainSubsystem;
+import frc.robot.subsystems.EstimateConsumer;
+import frc.robot.subsystems.IntakeWheelSubsystem;
+import frc.robot.subsystems.VisionSubsystem;
 import frc.utils.ControllerUtils;
+import org.littletonrobotics.urcl.URCL;
 
 public class RobotContainer {
   // Controller Utils Instance
@@ -32,15 +41,31 @@ public class RobotContainer {
   Command auto;
 
   // Subsystems
-  private final DrivetrainSubsystem drivetrain = new DrivetrainSubsystem();
+  private final VisionSubsystem vision = new VisionSubsystem(new EstimateConsumer());
+  private final DrivetrainSubsystem drivetrain = new DrivetrainSubsystem(vision);
+  private final IntakeWheelSubsystem intakeWheel = new IntakeWheelSubsystem();
 
   // Commands
   private final TeleopCmd teleopCmd =
       new TeleopCmd(
           drivetrain,
-          () -> cutil.Boolsupplier(Controllers.ps4_LB, DriveConstants.joysticks.DRIVER));
+          () -> cutil.Boolsupplier(Controllers.xbox_lb, DriveConstants.joysticks.DRIVER));
+
+  private static final String[] GIT_FLAG = {"clean", "dirty"};
 
   public RobotContainer() {
+
+    DataLogManager.start();
+    DriverStation.startDataLog(DataLogManager.getLog());
+    URCL.start();
+
+    // log build information
+    DataLogManager.log("Git branch: " + BuildConstants.GIT_BRANCH);
+    DataLogManager.log("Git date: " + BuildConstants.GIT_DATE);
+    DataLogManager.log("Git hash: " + BuildConstants.GIT_SHA);
+    DataLogManager.log("Git branch status: " + GIT_FLAG[BuildConstants.DIRTY]);
+    DataLogManager.log("Build date: " + BuildConstants.BUILD_DATE);
+
     // Declare default command during Teleop Period as TeleopCmd(Driving Command)
     drivetrain.setDefaultCommand(teleopCmd);
 
@@ -64,8 +89,23 @@ public class RobotContainer {
     // Prior Reference:
     // https://github.com/OysterRiverOverdrive/Charged-Up-2023-Atlas_Chainsaw/blob/main/src/main/java/frc/robot/RobotContainer.java
     cutil
-        .supplier(Controllers.ps4_RB, DriveConstants.joysticks.DRIVER)
+        .supplier(Controllers.xbox_rb, DriveConstants.joysticks.DRIVER)
         .onTrue(new InstantCommand(() -> drivetrain.zeroHeading()));
+
+    cutil
+        .supplier(Controllers.xbox_a, DriveConstants.joysticks.DRIVER)
+        .onTrue(new InstantCommand(() -> DrivetrainSubsystem.toggleAutoAim()));
+
+    // Intake Wheel Bindings
+    cutil
+        .supplier(Controllers.xbox_lb, DriveConstants.joysticks.OPERATOR)
+        .onTrue(new IntakeWheelForwardCommand(intakeWheel))
+        .onFalse(new IntakeWheelStopCommand(intakeWheel));
+
+    cutil
+        .supplier(Controllers.xbox_rb, DriveConstants.joysticks.OPERATOR)
+        .onTrue(new IntakeWheelReverseCommand(intakeWheel))
+        .onFalse(new IntakeWheelStopCommand(intakeWheel));
   }
 
   public Command getAutonomousCommand() {
