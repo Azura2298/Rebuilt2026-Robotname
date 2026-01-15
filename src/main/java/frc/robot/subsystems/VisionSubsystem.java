@@ -74,26 +74,26 @@ public class VisionSubsystem extends SubsystemBase {
       SmartDashboard.putData("Camera " + (i + 1), poseEstField[i]);
     }
 
-    fieldmap = AprilTagFieldLayout.loadField(AprilTagFields.k);
+    fieldmap = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeAndyMark);
 
     photonEstimatorCam1 =
         new PhotonPoseEstimator(
-            fieldmap, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, Vision.kRobotToCam1);
+            fieldmap, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, VisionConstants.kRobotToCam1);
     photonEstimatorCam1.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 
     photonEstimatorCam2 =
         new PhotonPoseEstimator(
-            fieldmap, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, Vision.kRobotToCam2);
+            fieldmap, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, VisionConstants.kRobotToCam2);
     photonEstimatorCam2.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 
     photonEstimatorCam3 =
         new PhotonPoseEstimator(
-            fieldmap, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, Vision.kRobotToCam3);
+            fieldmap, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, VisionConstants.kRobotToCam3);
     photonEstimatorCam3.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 
     photonEstimatorCam4 =
         new PhotonPoseEstimator(
-            fieldmap, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, Vision.kRobotToCam4);
+            fieldmap, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, VisionConstants.kRobotToCam4);
     photonEstimatorCam4.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 
     // Add other photonEstimators when other cameras are added
@@ -119,7 +119,7 @@ public class VisionSubsystem extends SubsystemBase {
       // targets.
       cameraSim = new PhotonCameraSim(camera1, cameraProp);
       // Add the simulated camera to view the targets on this simulated field.
-      visionSim.addCamera(cameraSim, Vision.kRobotToCam1);
+      visionSim.addCamera(cameraSim, VisionConstants.kRobotToCam1);
 
       cameraSim.enableDrawWireframe(true);
     }
@@ -180,11 +180,11 @@ public class VisionSubsystem extends SubsystemBase {
       Optional<EstimatedRobotPose> estimatedPose, List<PhotonTrackedTarget> targets) {
     if (estimatedPose.isEmpty()) {
       // No pose input. Default to single-tag std devs
-      curStdDevs = Vision.kSingleTagStdDevs;
+      curStdDevs = VisionConstants.kSingleTagStdDevs;
 
     } else {
       // Pose present. Start running Heuristic
-      var estStdDevs = Vision.kSingleTagStdDevs;
+      var estStdDevs = VisionConstants.kSingleTagStdDevs;
       int numTags = 0;
       double avgDist = 0;
 
@@ -205,12 +205,12 @@ public class VisionSubsystem extends SubsystemBase {
 
       if (numTags == 0) {
         // No tags visible. Default to single-tag std devs
-        curStdDevs = Vision.kSingleTagStdDevs;
+        curStdDevs = VisionConstants.kSingleTagStdDevs;
       } else {
         // One or more tags visible, run the full heuristic.
         avgDist /= numTags;
         // Decrease std devs if multiple targets are visible
-        if (numTags > 1) estStdDevs = Vision.kMultiTagStdDevs;
+        if (numTags > 1) estStdDevs = VisionConstants.kMultiTagStdDevs;
         // Increase std devs based on (average) distance
         if (numTags == 1 && avgDist > 4)
           estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
