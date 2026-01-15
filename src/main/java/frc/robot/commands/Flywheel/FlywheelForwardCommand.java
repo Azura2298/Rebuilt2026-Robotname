@@ -9,10 +9,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class FlywheelForwardCommand extends Command {
   @SuppressWarnings({"PMD.UnusedPrivateField", "PMD.SingularField"})
-  private final FlywheelSubsystem flywheel_subsystem; // if this works for anyone else that's FINE that's GREAT
-                                                      // it said it couldn't resolve to a type after I moved my github folder out of onedrive
-                                                      // I have no idea what the hell is going on
-                                                      // -Z
+  private final FlywheelSubsystem flywheel_subsystem;
+  
   /** Creates a new FlywheelForwardCommand. */
   public FlywheelForwardCommand() {
     flywheel_subsystem = subsystem;
