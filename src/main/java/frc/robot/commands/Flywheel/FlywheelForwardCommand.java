@@ -9,15 +9,16 @@ import edu.wpi.first.wpilibj2.command.Command;
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class FlywheelForwardCommand extends Command {
   @SuppressWarnings({"PMD.UnusedPrivateField", "PMD.SingularField"})
-  private final FlywheelSubsystem flywheel_subsystem;
-
-
+  private final FlywheelSubsystem flywheel_subsystem; // if this works for anyone else that's FINE that's GREAT
+                                                      // it said it couldn't resolve to a type after I moved my github folder out of onedrive
+                                                      // I have no idea what the hell is going on
+                                                      // -Z
   /** Creates a new FlywheelForwardCommand. */
-    public FlywheelForwardCommand() {
-      flywheel_subsystem = subsystem;
-      // Use addRequirements() here to declare subsystem dependencies.
-      addRequirements(subsystem);
-    }
+  public FlywheelForwardCommand() {
+    flywheel_subsystem = subsystem;
+    // Use addRequirements() here to declare subsystem dependencies.
+    addRequirements(subsystem);
+  }
 
   // Called when the command is initially scheduled.
   @Override
@@ -25,7 +26,9 @@ public class FlywheelForwardCommand extends Command {
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
-  public void execute() {flywheel_subsystem.flywheelForwardCmd();}
+  public void execute() {
+    flywheel_subsystem.flywheelForwardCmd();
+  }
 
   // Called once the command ends or is interrupted.
   @Override

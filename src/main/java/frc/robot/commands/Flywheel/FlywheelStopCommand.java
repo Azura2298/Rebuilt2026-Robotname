@@ -11,12 +11,12 @@ public class FlywheelStopCommand extends Command {
   @SuppressWarnings({"PMD.UnusedPrivateField", "PMD.SingularField"})
   private final FlywheelSubsystem flywheel_subsystem;
 
-    /** Creates a new FlywheelStop. */
-    public FlywheelStopCommand(FlywheelSubsystem subsystem) {
-      flywheel_subsystem = subsystem;
-      // Use addRequirements() here to declare subsystem dependencies.
-      addRequirements(subsystem);
-    }
+  /** Creates a new FlywheelStop. */
+  public FlywheelStopCommand(FlywheelSubsystem subsystem) {
+    flywheel_subsystem = subsystem;
+    // Use addRequirements() here to declare subsystem dependencies.
+    addRequirements(subsystem);
+  }
 
   // Called when the command is initially scheduled.
   @Override
@@ -24,7 +24,9 @@ public class FlywheelStopCommand extends Command {
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
-  public void execute() {flywheel_subsystem.flywheelStopCmd();}
+  public void execute() {
+    flywheel_subsystem.flywheelStopCmd();
+  }
 
   // Called once the command ends or is interrupted.
   @Override

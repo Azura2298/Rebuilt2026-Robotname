@@ -4,9 +4,9 @@
 
 package frc.robot.subsystems;
 
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.RobotConstants;
 
 public class FlywheelSubsystem extends SubsystemBase { // if a quiz is quizzical then what is a test
@@ -18,7 +18,7 @@ public class FlywheelSubsystem extends SubsystemBase { // if a quiz is quizzical
   public void flywheelForwardCmd() {
     flywheel.set(RobotConstants.kFlywheelSpeed);
   }
-  
+
   public void flywheelStopCmd() {
     flywheel.stopMotor();
   }
