@@ -5,14 +5,15 @@
 package frc.robot.commands.Flywheel;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.subsystems.FlywheelSubsystem;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class FlywheelForwardCommand extends Command {
   @SuppressWarnings({"PMD.UnusedPrivateField", "PMD.SingularField"})
   private final FlywheelSubsystem flywheel_subsystem;
-  
+
   /** Creates a new FlywheelForwardCommand. */
-  public FlywheelForwardCommand() {
+  public FlywheelForwardCommand(FlywheelSubsystem subsystem) {
     flywheel_subsystem = subsystem;
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(subsystem);
