@@ -23,7 +23,6 @@ import java.util.Optional;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
@@ -74,27 +73,15 @@ public class VisionSubsystem extends SubsystemBase {
       SmartDashboard.putData("Camera " + (i + 1), poseEstField[i]);
     }
 
-    fieldmap = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeAndyMark);
+    fieldmap = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
-    photonEstimatorCam1 =
-        new PhotonPoseEstimator(
-            fieldmap, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, VisionConstants.kRobotToCam1);
-    photonEstimatorCam1.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+    photonEstimatorCam1 = new PhotonPoseEstimator(fieldmap, VisionConstants.kRobotToCam1);
 
-    photonEstimatorCam2 =
-        new PhotonPoseEstimator(
-            fieldmap, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, VisionConstants.kRobotToCam2);
-    photonEstimatorCam2.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+    photonEstimatorCam2 = new PhotonPoseEstimator(fieldmap, VisionConstants.kRobotToCam2);
 
-    photonEstimatorCam3 =
-        new PhotonPoseEstimator(
-            fieldmap, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, VisionConstants.kRobotToCam3);
-    photonEstimatorCam3.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+    photonEstimatorCam3 = new PhotonPoseEstimator(fieldmap, VisionConstants.kRobotToCam3);
 
-    photonEstimatorCam4 =
-        new PhotonPoseEstimator(
-            fieldmap, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, VisionConstants.kRobotToCam4);
-    photonEstimatorCam4.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+    photonEstimatorCam4 = new PhotonPoseEstimator(fieldmap, VisionConstants.kRobotToCam4);
 
     // Add other photonEstimators when other cameras are added
     photonEstimators.add(photonEstimatorCam1);
@@ -130,7 +117,10 @@ public class VisionSubsystem extends SubsystemBase {
     for (int i = 0; i < 4; i++) {
       PhotonCamera camera = cameras.get(i);
       for (var change : camera.getAllUnreadResults()) {
-        visionEst = photonEstimators.get(i).update(change);
+        visionEst = photonEstimators.get(i).estimateCoprocMultiTagPose(change);
+        if (visionEst.isEmpty()) {
+          visionEst = photonEstimators.get(i).estimateLowestAmbiguityPose(change);
+        }
         updateEstimationStdDevs(visionEst, change.getTargets());
 
         if (Robot.isSimulation()) {
@@ -221,8 +211,7 @@ public class VisionSubsystem extends SubsystemBase {
   }
 
   /**
-   * Returns the latest standard deviations of the estimated pose from {@link
-   * #getEstimatedGlobalPose()}, for use with {@link
+   * Returns the latest standard deviations of the estimated pose for use with {@link
    * edu.wpi.first.math.estimator.SwerveDrivePoseEstimator SwerveDrivePoseEstimator}. This should
    * only be used when there are targets visible.
    */
