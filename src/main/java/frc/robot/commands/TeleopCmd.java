@@ -51,20 +51,27 @@ public class TeleopCmd extends Command {
           MathUtil.applyDeadband(
               -controller.getRawAxis(DriveConstants.kDriveRotate), DriveConstants.deadzoneDriver);
     } else {
-      double angleTranslation =
-          (Math.atan2(
-                  VisionConstants.autoAimTarget.getY() - driveSub.getVisionPose().getY(),
-                  VisionConstants.autoAimTarget.getX() - driveSub.getVisionPose().getX())
-              - driveSub.getVisionPose().getRotation().getRadians());
+      // Calculate the angle from the robot to the target
+      double angleToTarget =
+          Math.atan2(
+              VisionConstants.autoAimTarget.getY() - driveSub.getVisionPose().getY(),
+              VisionConstants.autoAimTarget.getX() - driveSub.getVisionPose().getX());
 
-      if (angleTranslation > Math.PI && angleTranslation < 2 * Math.PI) {
-        ContRotate = VisionConstants.kAutoAimP * (angleTranslation - 2 * Math.PI);
-      } else if (angleTranslation >= 0) {
-        ContRotate = VisionConstants.kAutoAimP * (angleTranslation);
-      } else {
-        ContRotate = 0;
-        SmartDashboard.putBoolean("OH NO IT TURNED BAD", false);
-      }
+      // Calculate the angle difference (how much we need to rotate)
+      double angleError = angleToTarget - driveSub.getVisionPose().getRotation().getRadians();
+
+      // Normalize the angle error to [-π, π]
+      angleError = Math.atan2(Math.sin(angleError), Math.cos(angleError));
+
+      // Apply proportional control to calculate rotation speed
+      ContRotate = VisionConstants.kAutoAimP * angleError;
+
+      // Optional: Clamp the rotation speed to prevent it from being too large
+      ContRotate = MathUtil.clamp(ContRotate, -1.0, 1.0);
+
+      // Log auto-aim data to SmartDashboard for debugging
+      SmartDashboard.putNumber("Auto Aim Angle Error (deg)", Math.toDegrees(angleError));
+      SmartDashboard.putNumber("Auto Aim Rotation Output", ContRotate);
     }
 
     speedDrive = DrivetrainSubsystem.getTeleopMaxSpeed();

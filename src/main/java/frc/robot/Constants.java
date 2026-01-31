@@ -97,11 +97,11 @@ public final class Constants {
 
     public static final Pose2d autoAimTarget =
         new Pose2d(
-            Distance.ofRelativeUnits(5, Units.Meters),
-            Distance.ofRelativeUnits(2, Units.Meters),
+            Distance.ofRelativeUnits(13, Units.Meters),
+            Distance.ofRelativeUnits(6, Units.Meters),
             new Rotation2d());
 
-    public static final double kAutoAimP = 0.2;
+    public static final double kAutoAimP = 0.75;
   }
 
   // Constants specifically for Driving & Operation
