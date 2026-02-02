@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import com.playingwithfusion.TimeOfFlight;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -52,6 +53,12 @@ public class RobotContainer {
           () -> cutil.Boolsupplier(Controllers.xbox_lb, DriveConstants.joysticks.DRIVER));
 
   private static final String[] GIT_FLAG = {"clean", "dirty"};
+
+  // We need to instantiate a Playing With Fusion class in order for their
+  // configuration server to be launched on the Rio. This is their recommended
+  // minimal approach. See:
+  // https://www.chiefdelphi.com/t/2026-playing-with-fusion-product-launch-advanced-battery-solution/507717/115
+  private final TimeOfFlight tof = new TimeOfFlight(0);
 
   public RobotContainer() {
 

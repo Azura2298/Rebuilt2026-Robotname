@@ -165,6 +165,7 @@ public final class Constants {
 
     public static final int kFlywheelCanId = 9;
     public static final int kIntakeWheelCanId = 10;
+    public static final int kFeederCanId = 11;
 
     // Used to declare Navx as upside down
     public static final boolean kGyroReversed = true;
@@ -177,6 +178,7 @@ public final class Constants {
 
     public static final double kFlywheelSpeed = 0.5;
     public static final double kIntakeWheelSpeed = 0.5;
+    public static final double kFeederSpeed = 0.5;
   }
 
   // Constants specifically for Swerve Module
