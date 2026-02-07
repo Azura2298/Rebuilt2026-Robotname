@@ -22,7 +22,6 @@ import java.util.List;
 
 public class AutoCreationCmd {
 
-  DrivetrainSubsystem drivetrain;
 
   /**
    * Method to autonomously drive the robot (ALL MEASUREMENTS IN METERS) All coordinates should be
@@ -39,9 +38,8 @@ public class AutoCreationCmd {
    *
    * @return A Command variable telling the robot to drive
    */
-  public Command AutoRobotDriveCmd(
+  public static Command AutoRobotDriveCmd(
       DrivetrainSubsystem drivetrain, List<Translation2d> waypoints, Pose2d finalrest) {
-    this.drivetrain = drivetrain;
 
     TrajectoryConfig trajectoryConfig =
         new TrajectoryConfig(
@@ -96,9 +94,8 @@ public class AutoCreationCmd {
    *
    * @return A Command variable telling the robot to drive
    */
-  public Command AutoFieldDriveCmd(
+  public static Command AutoFieldDriveCmd(
       DrivetrainSubsystem drivetrain, List<Translation2d> waypoints, Pose2d finalrest) {
-    this.drivetrain = drivetrain;
 
     TrajectoryConfig trajectoryConfig =
         new TrajectoryConfig(
@@ -147,12 +144,11 @@ public class AutoCreationCmd {
    * @param finalrest
    * @return
    */
-  public Command AutoDriveSpeedVar(
+  public static Command AutoDriveSpeedVar(
       Double maxSpeed,
-      DrivetrainSubsystem _drivetrain,
+      DrivetrainSubsystem drivetrain,
       List<Translation2d> waypoints,
       Pose2d finalrest) {
-    drivetrain = _drivetrain;
 
     TrajectoryConfig trajectoryConfig =
         new TrajectoryConfig(maxSpeed, AutoConstants.kMaxAccelerationMetersPerSecondSquared)
